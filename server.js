@@ -1,20 +1,15 @@
 require("dotenv").config();
 const express = require("express");
-const bodyParser = require("body-parser"); // latest version of exressJS now comes with Body-Parser!
-const bcrypt = require("bcrypt-nodejs");
 const cors = require("cors");
 const knex = require("knex");
 
-const register = require("./controllers/register");
-const signin = require("./controllers/signin");
 const profile = require("./controllers/profile");
 const image = require("./controllers/image");
-const auth = require("./controllers/authorization");
 
 //Database Setup - add your own information here based on the DB you created
 const db = knex({
   client: "pg",
-  connection: process.env.PG_PASSWORD,
+  connection: process.env.PG_URL,
 });
 
 const app = express();
@@ -22,23 +17,27 @@ const app = express();
 app.use(cors());
 app.use(express.json()); // latest version of exressJS now comes with Body-Parser!
 
-app.post("/signin", signin.signinAuthentication(db, bcrypt));
-app.post("/register", (req, res) => {
-  register.handleRegister(req, res, db, bcrypt);
+app.get(["/", "/:name"], (req, res) => {
+  greeting = "<h1>Hello From Node on Fly!</h1>";
+  name = req.params["name"];
+  if (name) {
+    res.send(greeting + "</br>and hello to " + name);
+  } else {
+    res.send(greeting);
+  }
 });
-app.get("/profile/:id", auth.requireAuth, (req, res) => {
+app.get("/profile/:id", (req, res) => {
   profile.handleProfileGet(req, res, db);
 });
-app.post("/profile/:id", auth.requireAuth, (req, res) => {
+app.post("/profile/:id", (req, res) => {
   profile.handleProfileUpdate(req, res, db);
 });
-app.put("/image", auth.requireAuth, (req, res) => {
-  image.handleImage(req, res, db);
-});
-app.post("/imageurl", auth.requireAuth, (req, res) => {
+app.post("/imageurl", (req, res) => {
   image.handleApiCall(req, res);
 });
 
-app.listen(3000, () => {
-  console.log("app is running on port 3000");
+const port = process.env.PORT || "8080";
+
+app.listen(port, () => {
+  console.log("app is running on port 8080");
 });
